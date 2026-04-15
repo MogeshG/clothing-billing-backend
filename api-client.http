@@ -1,0 +1,337 @@
+# Clothing Billing Backend API Client
+# VSCode REST Client: https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+# Run server: npm run dev
+# Click "Send Request" above each request
+
+@baseUrl = http://localhost:3000/api/v1
+@token = 
+
+### Auth: Register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@example.com",
+  "password": "password123"
+  // See src/validation/auth.ts for full schema
+}
+
+### Auth: Login (update @token with JWT from response)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+> {%
+  client.global.set("token", response.body.token || response.body.accessToken);
+%}
+
+### Customers: Create
+POST {{baseUrl}}/customers/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "phone": "1234567890"
+  // Full: src/validation/customers.ts
+}
+
+### Customers: List
+GET {{baseUrl}}/customers/
+Authorization: Bearer {{token}}
+
+### Customers: Get by ID
+GET {{baseUrl}}/customers/1
+Authorization: Bearer {{token}}
+
+### Customers: Update
+PUT {{baseUrl}}/customers/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "John Doe Updated"
+}
+
+### Customers: Delete
+DELETE {{baseUrl}}/customers/1
+Authorization: Bearer {{token}}
+
+### Vendors: Create
+POST {{baseUrl}}/vendors/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Vendor Inc",
+  "email": "vendor@example.com",
+  "phone": "0987654321"
+}
+
+### Vendors: List
+GET {{baseUrl}}/vendors/
+Authorization: Bearer {{token}}
+
+### Vendors: Get by ID
+GET {{baseUrl}}/vendors/1
+Authorization: Bearer {{token}}
+
+### Vendors: Update
+PUT {{baseUrl}}/vendors/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Vendor Inc Updated"
+}
+
+### Vendors: Delete
+DELETE {{baseUrl}}/vendors/1
+Authorization: Bearer {{token}}
+
+### Purchases: Create
+POST {{baseUrl}}/purchases/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "vendorId": 1,
+  "items": []  // array of {productId, quantity, etc.}
+}
+
+### Purchases: List
+GET {{baseUrl}}/purchases/
+Authorization: Bearer {{token}}
+
+### Batches: Create Single
+POST {{baseUrl}}/batches/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "batchNo": "BATCH001",
+  "quantity": 100,
+  "expiryDate": "2025-12-31"
+}
+
+### Batches: Create Bulk
+POST {{baseUrl}}/batches/bulk
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+[
+  {
+    "productId": 1,
+    "batchNo": "BULK001",
+    "quantity": 50
+  }
+]
+
+### Batches: List
+GET {{baseUrl}}/batches/
+Authorization: Bearer {{token}}
+
+### Batches: Get by ID
+GET {{baseUrl}}/batches/1
+Authorization: Bearer {{token}}
+
+### Batches: Update
+PATCH {{baseUrl}}/batches/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "quantity": 150
+}
+
+### Batches: Get by BatchNo
+GET {{baseUrl}}/batches/batchNo/BATCH001
+Authorization: Bearer {{token}}
+
+### Batches: Delete
+DELETE {{baseUrl}}/batches/1
+Authorization: Bearer {{token}}
+
+### Categories: Create
+POST {{baseUrl}}/categories/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Shirts",
+  "description": "Men&#39;s shirts"
+}
+
+### Categories: List
+GET {{baseUrl}}/categories/
+Authorization: Bearer {{token}}
+
+### Categories: Get by ID
+GET {{baseUrl}}/categories/1
+Authorization: Bearer {{token}}
+
+### Categories: Update
+PATCH {{baseUrl}}/categories/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "T-Shirts"
+}
+
+### Categories: Delete
+DELETE {{baseUrl}}/categories/1
+Authorization: Bearer {{token}}
+
+### Products: Create
+POST {{baseUrl}}/products/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "T-Shirt",
+  "sku": "TS001",
+  "categoryId": 1,
+  "variants": []
+}
+
+### Products: List
+GET {{baseUrl}}/products/
+Authorization: Bearer {{token}}
+
+### Products: Get by ID
+GET {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+
+### Products: Get by SKU
+GET {{baseUrl}}/products/sku/TS001
+Authorization: Bearer {{token}}
+
+### Products: Update
+PATCH {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "T-Shirt Updated"
+}
+
+### Products: Delete
+DELETE {{baseUrl}}/products/1
+Authorization: Bearer {{token}}
+
+### Variants: Create
+POST {{baseUrl}}/variants/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "size": "M",
+  "color": "Blue",
+  "price": 29.99
+}
+
+### Variants: List
+GET {{baseUrl}}/variants/
+Authorization: Bearer {{token}}
+
+### Variants: Get by ID
+GET {{baseUrl}}/variants/1
+Authorization: Bearer {{token}}
+
+### Variants: Get by Product
+GET {{baseUrl}}/variants/product/1
+Authorization: Bearer {{token}}
+
+### Variants: Update
+PATCH {{baseUrl}}/variants/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "price": 34.99
+}
+
+### Variants: Delete
+DELETE {{baseUrl}}/variants/1
+Authorization: Bearer {{token}}
+
+### Invoices: Create
+POST {{baseUrl}}/invoices/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "customerId": 1,
+  "items": []  // array {variantId, quantity, etc.}
+}
+
+### Invoices: List
+GET {{baseUrl}}/invoices/
+Authorization: Bearer {{token}}
+
+### Invoices: Get by ID
+GET {{baseUrl}}/invoices/1
+Authorization: Bearer {{token}}
+
+### Invoices: Update Draft
+PATCH {{baseUrl}}/invoices/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "items": []
+}
+
+### Invoices: Finalize
+POST {{baseUrl}}/invoices/1/finalize
+Authorization: Bearer {{token}}
+
+### Invoices: Delete
+DELETE {{baseUrl}}/invoices/1
+Authorization: Bearer {{token}}
+
+### Credit Notes: Create
+POST {{baseUrl}}/creditnotes/
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "invoiceId": 1,
+  "reason": "Defective",
+  "items": []
+}
+
+### Credit Notes: List
+GET {{baseUrl}}/creditnotes/
+Authorization: Bearer {{token}}
+
+### Credit Notes: Get by ID
+GET {{baseUrl}}/creditnotes/1
+Authorization: Bearer {{token}}
+
+### Credit Notes: Update
+PATCH {{baseUrl}}/creditnotes/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 100
+}
+
+### Credit Notes: Approve
+POST {{baseUrl}}/creditnotes/1/approve
+Authorization: Bearer {{token}}
+
+### Credit Notes: Delete
+DELETE {{baseUrl}}/creditnotes/1
+Authorization: Bearer {{token}}
+

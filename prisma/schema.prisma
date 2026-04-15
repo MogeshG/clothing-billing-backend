@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ================= USERS =================
+model Users {
+  id    String  @id @default(uuid())
+  name  String
+  phone String  @unique
+  email String? @unique
+
+  permissions    String? // JSON stored as string (SQLite safe)
+  hashedPassword String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= CUSTOMERS =================
+model Customers {
+  id      String  @id @default(uuid())
+  name    String
+  phone   String  @unique
+  email   String?
+  address String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= VENDORS =================
+model Vendors {
+  id String @id @default(uuid())
+
+  name    String
+  phone   String  @unique
+  email   String?
+  address String?
+
+  gstin String? @unique
+
+  companyName   String?
+  city          String?
+  state         String?
+  country       String  @default("India")
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= UNITS =================
+model Units {
+  id String @id @default(uuid())
+
+  name String
+  key  String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= CATEGORY =================
+model ProductCategories {
+  id String @id @default(uuid())
+
+  name        String
+  key         String  @unique
+  description String?
+
+  products Products[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= PRODUCTS =================
+model Products {
+  id String @id @default(uuid())
+
+  name        String
+  sku         String  @unique
+  description String?
+
+  categoryId String
+  category   ProductCategories @relation(fields: [categoryId], references: [id])
+
+  brand   String?
+  barcode String?
+
+  basePrice Float
+  costPrice Float?
+  mrp       Float
+
+  gstPercent   Float   @default(0)
+  taxInclusive Boolean @default(false)
+
+  isActive Boolean @default(true)
+
+  variants ProductVariant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= PRODUCT VARIANT =================
+model ProductVariant {
+  id String @id @default(uuid())
+
+  productId String
+  product   Products @relation(fields: [productId], references: [id])
+
+  size  String
+  color String
+
+  sku String? @unique
+
+  price     Float?
+  costPrice Float?
+
+  batches Batches[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ================= BATCHES =================
+model Batches {
+  id String @id @default(uuid())
+
+  productVariantId String
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+
+  batchNo String @unique
+
+  purchasePrice Float
+  sellingPrice  Float?
+
+  quantity          Int @default(0)
+  remainingQuantity Int @default(0)
+
+  manufactureDate DateTime?
+  expiryDate      DateTime?
+
+  supplierName String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// =============== PURCHASES =================
+
+model Purchases {
+  id         String @id @default(uuid())
+  purchaseNo String @unique
+
+  status     String @default("DRAFT")
+  // DRAFT, COMPLETED, CANCELLED
+
+  supplierName  String?
+  supplierPhone String?
+  supplierGstin String?
+
+  subTotal   Float @default(0)
+  discount   Float @default(0)
+  taxAmount  Float @default(0)
+  totalAmount Float @default(0)
+
+  purchaseDate DateTime @default(now())
+
+  items      PurchaseItem[]
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// ==========PURCHASE ITEM===========
+
+model PurchaseItem {
+  id String @id @default(uuid())
+
+  purchaseId String
+  purchase   Purchases @relation(fields: [purchaseId], references: [id])
+
+  itemName String
+  sku      String?
+
+  size     String?
+  color    String?
+
+  quantity Float
+  price    Float
+
+  gstPercent Float @default(0)
+
+  total Float
+
+  createdAt DateTime @default(now())
+
+  @@index([purchaseId])
+}
+
+// ================= INVOICES =================
+model Invoices {
+  id String @id @default(uuid())
+
+  invoiceNo String @unique
+
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  customerAddress String?
+
+  subTotal    Float @default(0)
+  discount    Float @default(0)
+  taxAmount   Float @default(0)
+  totalAmount Float @default(0)
+
+  paidAmount Float @default(0)
+  balanceDue Float @default(0)
+
+  status String @default("DRAFT")
+  // DRAFT | FINALIZED | CANCELLED
+
+  paymentMethod String?
+
+  invoiceDate DateTime @default(now())
+
+  items        InvoiceItem[]
+  creditNotes  CreditNotes[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceNo])
+}
+
+// ================= INVOICE ITEMS =================
+model InvoiceItem {
+  id String @id @default(uuid())
+
+  invoiceId String
+  invoice   Invoices @relation(fields: [invoiceId], references: [id])
+
+  productName String
+  productSku  String?
+  variantSku  String?
+
+  size  String?
+  color String?
+
+  quantity Int
+
+  price    Float
+  discount Float @default(0)
+
+  gstPercent Float @default(0)
+  gstAmount  Float @default(0)
+
+  total Float
+
+  createdAt DateTime @default(now())
+}
+
+// ================= INVOICE AUDIT  ================
+model InvoiceAudit {
+  id String @id @default(uuid())
+  invoiceId String
+  action String
+  data String?  // JSON as string for SQLite
+  createdAt DateTime @default(now())
+}
+
+// ================ CREDIT NOTES ===================
+model CreditNotes {
+  id String @id @default(uuid())
+
+  creditNoteNo String @unique
+
+  invoiceId String
+  invoice   Invoices @relation(fields: [invoiceId], references: [id])
+
+  customerName String
+  customerPhone String?
+
+  totalRefund Float
+
+  reason String?
+
+  status String @default("DRAFT")
+  // DRAFT, APPROVED, REJECTED
+
+  items CreditNoteItem[]
+
+  createdAt DateTime @default(now())
+}
+
+// ============== CREDIT NOTES ITEM ==============
+model CreditNoteItem {
+  id String @id @default(uuid())
+
+  creditNoteId String
+  creditNote   CreditNotes @relation(fields: [creditNoteId], references: [id])
+
+  productName String
+  productSku  String?
+  quantity    Int
+
+  refundAmount Float
+
+  createdAt DateTime @default(now())
+}
