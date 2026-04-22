@@ -16,7 +16,7 @@ export const createCategory = async (req: Request, res: Response) => {
         });
     }
 
-    const category = await prisma.productCategories.create({
+    const category = await prisma.product_categories.create({
       data: parsed.data,
     });
 
@@ -31,8 +31,8 @@ export const createCategory = async (req: Request, res: Response) => {
 };
 
 export const getCategories = async (req: Request, res: Response) => {
-  const categories = await prisma.productCategories.findMany({
-    orderBy: { createdAt: "desc" },
+  const categories = await prisma.product_categories.findMany({
+    orderBy: { created_at: "desc" },
   });
   res.json(categories);
 };
@@ -40,7 +40,7 @@ export const getCategories = async (req: Request, res: Response) => {
 export const getCategoryById = async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const category = await prisma.productCategories.findUnique({
+    const category = await prisma.product_categories.findUnique({
       where: { id },
     });
     if (!category) return res.status(404).json({ error: "Category not found" });
@@ -62,7 +62,7 @@ export const updateCategory = async (req: Request, res: Response) => {
         });
     }
 
-    const category = await prisma.productCategories.update({
+    const category = await prisma.product_categories.update({
       where: { id },
       data: parsed.data,
     });
@@ -78,7 +78,7 @@ export const updateCategory = async (req: Request, res: Response) => {
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await prisma.productCategories.delete({
+    await prisma.product_categories.delete({
       where: { id },
     });
     res.json({ message: "Category deleted" });

@@ -9,6 +9,7 @@ import productsRouter from "./products";
 import variantsRouter from "./variants";
 import invoicesRouter from "./invoices";
 import creditNotesRouter from "./creditnotes";
+import unitsRouter from "./units";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/products", productsRouter);
 router.use("/variants", variantsRouter);
 router.use("/invoices", invoicesRouter);
 router.use("/creditnotes", creditNotesRouter);
+router.use("/units", unitsRouter);
 
 export default router;

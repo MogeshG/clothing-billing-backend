@@ -2,24 +2,66 @@ import { z } from "zod";
 
 const purchaseItemSchema = z
   .object({
-    itemName: z.string().min(1, "Item name required"),
-    sku: z.string().optional(),
-    size: z.string().optional(),
-    color: z.string().optional(),
+    item_name: z.string().min(1, "Item name required"),
+    item_type: z.enum(["RAW", "FINISHED"]),
+    sku: z.string().optional().or(z.undefined()),
+    size: z.string().optional().or(z.undefined()),
+    color: z.string().optional().or(z.undefined()),
+    hsn_code: z.string().optional(),
+    unit_id: z.string(),
+    unit_name: z.string(),
+    unit_symbol: z.string(),
+    product_variant_id: z.string().optional(),
     quantity: z.number().positive("Quantity must be positive"),
-    price: z.number().positive("Price must be positive"),
-    gstPercent: z.number().min(0, "GST percent cannot be negative").default(0),
+    cost_price: z.number().positive("Cost price must be positive"),
+    tax_inclusive: z.boolean(),
+    cgst_percent: z
+      .number()
+      .min(0, "CGST percent cannot be negative")
+      .default(0),
+    sgst_percent: z
+      .number()
+      .min(0, "SGST percent cannot be negative")
+      .default(0),
+    igst_percent: z
+      .number()
+      .min(0, "IGST percent cannot be negative")
+      .default(0),
+    total: z.coerce.number().optional(),
   })
-  .refine(
-    (data) => data.quantity > 0 && data.price > 0,
-    "Valid quantity and price required",
-  );
+  .superRefine((data, ctx) => {
+    if (data.item_type === "FINISHED" && !data.product_variant_id) {
+      ctx.addIssue({
+        code: "custom",
+        message: "product_variant_id required for FINISHED items",
+        path: ["product_variant_id"],
+      });
+    }
+  });
 
 export const createPurchaseSchema = z.object({
-  purchaseNo: z.string().min(1, "Purchase no required").max(50),
-  supplierName: z.string().optional(),
-  supplierPhone: z.string().optional(),
-  supplierGstin: z.string().optional(),
+  purchase_no: z
+    .string()
+    .min(1, "Purchase no required")
+    .max(50)
+    .or(z.literal("new")),
+  vendor_name: z.string().optional(),
+  vendor_phone: z.string().optional(),
+  vendor_gstin: z.string().optional(),
+  purchase_date: z.string().optional(),
   discount: z.number().min(0).default(0),
+  status: z.string(),
   items: z.array(purchaseItemSchema).min(1, "At least one item required"),
 });
+
+export const updatePurchaseSchema = createPurchaseSchema
+  .partial()
+  .extend({
+    items: z.array(purchaseItemSchema).optional(),
+    purchase_no: z.string().optional(),
+  })
+  .refine((data) => data.items && data.items.length > 0, {
+    message: "Items required for update",
+    path: ["items"],
+  })
+  .or(z.object({})); // Allow empty for minimal updates

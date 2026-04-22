@@ -101,8 +101,29 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "vendorId": 1,
-  "items": []  // array of {productId, quantity, etc.}
+  "purchaseNo": "new",
+  "vendorName": "Test Vendor",
+  "vendorPhone": "9876543210",
+  "vendorGstin": "27ABCDE1234F1Z5",
+  "purchaseDate": "2024-10-01",
+  "discount": 10,
+  "items": [
+    {
+      "itemName": "Test T-Shirt",
+      "itemType": "FINISHED",
+      "sku": "TS001",
+      "size": "M",
+      "color": "Blue",
+      "hsnCode": "6109",
+      "productVariantId": "some-variant-uuid-here",
+      "quantity": 5,
+      "costPrice": 200,
+      "cgstPercent": 9,
+      "sgstPercent": 9,
+      "igstPercent": 0,
+      "taxInclusive": false
+    }
+  ]
 }
 
 ### Purchases: List
