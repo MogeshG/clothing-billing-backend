@@ -1,33 +1,32 @@
 import { z } from "zod";
 
-const batchItemSchema = z
-  .object({
-    batchNo: z.string().min(1, "Batch no required").max(50),
-    productVariantId: z.string().uuid("Valid product variant ID").optional(),
-    productSku: z.string().optional(),
-    size: z.string().optional(),
-    color: z.string().optional(),
-    quantity: z.number().int().positive("Quantity must be positive"),
-    purchasePrice: z.number().positive("Purchase price must be positive"),
-    sellingPrice: z
-      .number()
-      .positive("Selling price must be positive")
-      .optional(),
-    remainingQuantity: z.number().int().min(0).default(0),
-    manufactureDate: z.date().optional(),
-    expiryDate: z.date().optional(),
-    supplierName: z.string().max(100).optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.productVariantId) return true;
-      if (data.productSku && data.size && data.color) return true;
-      return false;
-    },
-    {
-      message: "Provide either productVariantId or (productSku + size + color)",
-    },
-  );
+const batchItemSchema = z.object({
+  batch_no: z.string().min(1, "Batch no required").max(50),
+  product_variant_id: z.string().uuid("Valid product variant ID"),
+  unit_id: z.string(),
+  unit_name: z.string(),
+  unit_symbol: z.string(),
+  product_name: z.string(),
+  variant_sku: z.string().optional(),
+  hsn_code: z.string().optional(),
+  barcode: z.string().min(1, "Barcode is required"),
+  status: z.string().default("ACTIVE"),
+  purchase_item_id: z.string().optional(),
+  purchase_no: z.string().optional(),
+  vendor_name: z.string().max(100).optional(),
+  purchase_date: z.coerce.date().optional(),
+  purchase_price: z.number().positive("Purchase price must be positive"),
+  mrp: z.number().positive("MRP must be positive").default(0),
+  selling_price: z.number().positive("Selling price must be positive").optional(),
+  cgst_percent: z.number().min(0).default(0),
+  sgst_percent: z.number().min(0).default(0),
+  igst_percent: z.number().min(0).default(0),
+  tax_inclusive: z.boolean().default(false),
+  quantity: z.number().int().positive("Quantity must be positive"),
+  remaining_quantity: z.number().int().min(0).default(0),
+  manufacture_date: z.coerce.date().optional(),
+  expiry_date: z.coerce.date().optional(),
+});
 
 export const createBatchSchema = batchItemSchema;
 
@@ -36,12 +35,13 @@ export const createBulkBatchesSchema = z.object({
 });
 
 export const updateBatchSchema = z.object({
-  productVariantId: z.string().uuid().optional(),
-  quantity: z.number().int().positive().optional(),
-  purchasePrice: z.number().positive().optional(),
-  sellingPrice: z.number().positive().optional(),
-  remainingQuantity: z.number().int().min(0).optional(),
-  manufactureDate: z.date().optional(),
-  expiryDate: z.date().optional(),
-  supplierName: z.string().max(100).optional(),
+  status: z.string().optional(),
+  quantity: z.coerce.number().int().positive().optional(),
+  purchase_price: z.coerce.number().positive().optional(),
+  selling_price: z.coerce.number().positive().optional(),
+  remaining_quantity: z.coerce.number().int().min(0).optional(),
+  manufacture_date: z.coerce.date().optional().nullable(),
+  expiry_date: z.coerce.date().optional().nullable(),
+  vendor_name: z.string().max(100).optional(),
+  tax_inclusive: z.boolean().optional(),
 });

@@ -10,7 +10,6 @@ export const createProduct = async (req: Request, res: Response) => {
     const parsed = createProductSchema.safeParse(req.body);
     if (!parsed.success) {
       const issues = parsed.error.issues;
-      // console.log("Validation issues:", JSON.stringify(issues, null, 2));
       const errorMsg =
         issues.length > 0
           ? issues.map((i) => `${i.path?.join(".")}: ${i.message}`).join("; ")
@@ -237,20 +236,20 @@ export const updateProduct = async (req: Request, res: Response) => {
       }),
       ...(inputData.variants && Array.isArray(inputData.variants)
         ? [
-            prisma.product_variant.deleteMany({ where: { product_id: id } }),
-            prisma.product_variant.createMany({
-              data: inputData.variants.map((v: any) => ({
-                product_id: id,
-                size: v.size,
-                color: v.color,
-                barcode: v.barcode,
-                sku: v.sku,
-                cost_price: v.cost_price,
-                selling_price: v.selling_price,
-                mrp: v.mrp,
-              })),
-            }),
-          ]
+          prisma.product_variant.deleteMany({ where: { product_id: id } }),
+          prisma.product_variant.createMany({
+            data: inputData.variants.map((v: any) => ({
+              product_id: id,
+              size: v.size,
+              color: v.color,
+              barcode: v.barcode,
+              sku: v.sku,
+              cost_price: v.cost_price,
+              selling_price: v.selling_price,
+              mrp: v.mrp,
+            })),
+          }),
+        ]
         : []),
     ]);
 

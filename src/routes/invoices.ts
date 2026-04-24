@@ -6,6 +6,7 @@ import {
   updateDraftInvoice,
   finalizeInvoice,
   deleteInvoice,
+  getInvoiceBill,
 } from "../controllers/invoiceController";
 
 const router = Router();
@@ -13,7 +14,8 @@ const router = Router();
 router.post("/", createInvoice);
 router.get("/", getInvoices);
 router.get("/:id", getInvoiceById);
-router.patch("/:id", updateDraftInvoice);
+router.get("/:id/bill", getInvoiceBill);
+router.put("/:id", updateDraftInvoice);
 router.post("/:id/finalize", finalizeInvoice);
 router.delete("/:id", deleteInvoice);
 

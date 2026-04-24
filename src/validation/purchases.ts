@@ -12,8 +12,9 @@ const purchaseItemSchema = z
     unit_name: z.string(),
     unit_symbol: z.string(),
     product_variant_id: z.string().optional(),
-    quantity: z.number().positive("Quantity must be positive"),
-    cost_price: z.number().positive("Cost price must be positive"),
+    quantity: z.coerce.number().positive("Quantity must be positive"),
+    cost_price: z.coerce.number().positive("Cost price must be positive"),
+    mrp: z.coerce.number().min(0, "MRP must be non-negative").default(0),
     tax_inclusive: z.boolean(),
     cgst_percent: z
       .number()

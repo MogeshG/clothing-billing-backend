@@ -5,6 +5,7 @@ import {
   createPurchaseSchema,
   updatePurchaseSchema,
 } from "../validation/purchases";
+import { generateBatchNo } from "../utils/generateBatchNo";
 
 console.log(1);
 
@@ -47,6 +48,7 @@ export const createPurchase = async (req: Request, res: Response) => {
       const cgst = item.cgst_percent;
       const sgst = item.sgst_percent;
       const igst = item.igst_percent || 0;
+      const mrp = item.mrp
       const taxRate = (cgst + sgst) / 100;
       const taxInclusive = item.tax_inclusive;
 
@@ -122,7 +124,7 @@ export const createPurchase = async (req: Request, res: Response) => {
           inputItem.item_type === "FINISHED" &&
           inputItem.product_variant_id
         ) {
-          const batchNo = `${purchase.purchase_no}-B${index + 1}`;
+          const batchNo = generateBatchNo();
           const batch = await prisma.batches.create({
             data: {
               product_variant_id: inputItem.product_variant_id,
@@ -140,10 +142,12 @@ export const createPurchase = async (req: Request, res: Response) => {
               vendor_name: vendor_name || "",
               purchase_date: purchaseDateValue,
               purchase_price: inputItem.cost_price,
+              mrp: inputItem.mrp,
               selling_price: 0,
               cgst_percent: inputItem.cgst_percent,
               sgst_percent: inputItem.sgst_percent,
               igst_percent: inputItem.igst_percent,
+              tax_inclusive: inputItem.tax_inclusive,
               quantity: inputItem.quantity,
               remaining_quantity: inputItem.quantity,
             },
@@ -355,7 +359,7 @@ export const updatePurchase = async (req: Request, res: Response) => {
           inputItem.item_type === "FINISHED" &&
           inputItem.product_variant_id
         ) {
-          const batchNo = `${purchase.purchase_no}-B${index + 1}`;
+          const batchNo = generateBatchNo();
           const batch = await prisma.batches.create({
             data: {
               product_variant_id: inputItem.product_variant_id,
@@ -373,10 +377,12 @@ export const updatePurchase = async (req: Request, res: Response) => {
               vendor_name: vendor_name || "",
               purchase_date: purchaseDateValue,
               purchase_price: inputItem.cost_price,
+              mrp: inputItem.mrp,
               selling_price: 0,
               cgst_percent: inputItem.cgst_percent,
               sgst_percent: inputItem.sgst_percent,
               igst_percent: inputItem.igst_percent,
+              tax_inclusive: inputItem.tax_inclusive,
               quantity: inputItem.quantity,
               remaining_quantity: inputItem.quantity,
             },

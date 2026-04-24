@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice - <%= invoice.invoice_no %>
+    </title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 40px;
+            color: #333;
+            background: #fff;
+        }
+
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            font-size: 16px;
+            line-height: 24px;
+            color: #555;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .company-info h1 {
+            margin: 0;
+            color: #000;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+
+        .company-info p {
+            margin: 2px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .invoice-details {
+            text-align: right;
+        }
+
+        .invoice-details h2 {
+            margin: 0;
+            color: #333;
+            font-size: 22px;
+        }
+
+        .invoice-details p {
+            margin: 2px 0;
+            font-size: 14px;
+        }
+
+        .billing-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .bill-to h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            text-transform: uppercase;
+            color: #999;
+        }
+
+        .bill-to p {
+            margin: 2px 0;
+            font-weight: 500;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            line-height: inherit;
+            text-align: left;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+
+        table th {
+            background: #f9f9f9;
+            padding: 12px;
+            border-bottom: 2px solid #eee;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        table tr.item:last-child td {
+            border-bottom: none;
+        }
+
+        .summary-section {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .summary-table {
+            width: 250px;
+        }
+
+        .summary-table div {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        .summary-table .total-row {
+            border-top: 2px solid #333;
+            margin-top: 10px;
+            padding-top: 10px;
+            font-weight: bold;
+            color: #000;
+            font-size: 18px;
+        }
+
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: none;
+            }
+
+            .invoice-box {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <div class="invoice-box"> -->
+    <div class="header">
+        <div class="company-info">
+            <h1>
+                <%= settings.companyName || 'CLOTHING STORE' %>
+            </h1>
+            <% if (settings.companyAddress) { %>
+                <p style="white-space: pre-line;">
+                    <%= settings.companyAddress %>
+                </p>
+                <% } else { %>
+                    <p>123 Fashion Street, Shopping Hub</p>
+                    <p>City, State, PIN - 600001</p>
+                    <% } %>
+                        <% if (settings.companyGSTIN) { %>
+                            <p>GSTIN: <%= settings.companyGSTIN %>
+                            </p>
+                            <% } %>
+                                <p>Phone: <%= settings.companyMobile1 || '+91 9876543210' %>
+                                        <%= settings.companyMobile2 ? ' / ' + settings.companyMobile2 : '' %>
+                                </p>
+        </div>
+        <div class="invoice-details">
+            <h2>INVOICE</h2>
+            <p><strong># <%= invoice.invoice_no %></strong></p>
+            <p>Date: <%= new Date(invoice.invoice_date).toLocaleDateString('en-IN', {day: '2-digit' , month: 'short' ,
+                    year: 'numeric' }) %>
+            </p>
+            <p>Status: <span style="color: <%= invoice.status === 'COMPLETED' ? '#2e7d32' : '#ed6c02' %>">
+                    <%= invoice.status %>
+                </span></p>
+        </div>
+    </div>
+
+    <div class="billing-info">
+        <div class="bill-to">
+            <h3>Bill To</h3>
+            <p>
+                <%= invoice.customer_name || 'Walk-in Customer' %>
+            </p>
+            <% if (invoice.customer_phone) { %>
+                <p>Ph: <%= invoice.customer_phone %>
+                </p>
+                <% } %>
+                    <% if (invoice.customer_address) { %>
+                        <p>
+                            <%= invoice.customer_address %>
+                        </p>
+                        <% } %>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 40%;">Description</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Price</th>
+                <th style="text-align: right;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% invoice.items.forEach(function(item) { %>
+                <tr class="item">
+                    <td>
+                        <strong>
+                            <%= item.product_name %>
+                        </strong><br>
+                        <span style="font-size: 12px; color: #888;">SKU: <%= item.variant_sku || item.product_sku
+                                || 'N/A' %></span>
+                    </td>
+                    <td style="text-align: center;">
+                        <%= item.quantity %>
+                    </td>
+                    <td style="text-align: right;">₹<%= Number(item.price).toFixed(2) %>
+                    </td>
+                    <td style="text-align: right;">₹<%= Number(item.total).toFixed(2) %>
+                    </td>
+                </tr>
+                <% }); %>
+        </tbody>
+    </table>
+
+    <div class="summary-section">
+        <div class="summary-table">
+            <div>
+                <span>Subtotal</span>
+                <span>₹<%= Number(invoice.sub_total).toFixed(2) %></span>
+            </div>
+            <div>
+                <span>Tax</span>
+                <span>₹<%= Number(invoice.tax_amount).toFixed(2) %></span>
+            </div>
+            <% if (Number(invoice.discount)> 0) { %>
+                <div style="color: #d32f2f;">
+                    <span>Discount</span>
+                    <span>-₹<%= Number(invoice.discount).toFixed(2) %></span>
+                </div>
+                <% } %>
+                    <div class="total-row">
+                        <span>Grand Total</span>
+                        <span>₹<%= Number(invoice.total_amount).toFixed(2) %></span>
+                    </div>
+                    <div style="font-size: 14px; margin-top: 10px;">
+                        <span>Paid Amount</span>
+                        <span style="color: #2e7d32;">₹<%= Number(invoice.paid_amount).toFixed(2) %></span>
+                    </div>
+                    <% if (Number(invoice.balance_due)> 0) { %>
+                        <div style="font-size: 14px; color: #d32f2f;">
+                            <span>Balance Due</span>
+                            <span>₹<%= Number(invoice.balance_due).toFixed(2) %></span>
+                        </div>
+                        <% } %>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px;">
+        <p><strong>Payment Method:</strong>
+            <%= invoice.payment_method || 'N/A' %>
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>Terms & Conditions:</p>
+        <p>Goods once sold cannot be taken back or exchanged. Thank you for your business!</p>
+        <p style="margin-top: 20px;"><em>Computer generated invoice. No signature required.</em></p>
+    </div>
+    <!-- </div> -->
+</body>
+
+</html>

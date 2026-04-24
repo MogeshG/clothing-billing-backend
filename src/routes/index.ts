@@ -10,6 +10,10 @@ import variantsRouter from "./variants";
 import invoicesRouter from "./invoices";
 import creditNotesRouter from "./creditnotes";
 import unitsRouter from "./units";
+import stockMovementsRouter from "./stockMovements";
+import stockAdjustmentsRouter from "./stockAdjustments";
+import analyticsRouter from "./analytics";
+import preferencesRouter from "./preferences";
 
 const router = Router();
 
@@ -24,5 +28,11 @@ router.use("/variants", variantsRouter);
 router.use("/invoices", invoicesRouter);
 router.use("/creditnotes", creditNotesRouter);
 router.use("/units", unitsRouter);
+router.use("/stock-movements", stockMovementsRouter);
+router.use("/stock-adjustments", stockAdjustmentsRouter);
+router.use("/analytics", analyticsRouter);
+router.use("/preferences", preferencesRouter);
 
 export default router;
+
+

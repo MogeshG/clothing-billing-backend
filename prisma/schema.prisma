@@ -137,11 +137,13 @@ model batches {
   purchase_date DateTime?
 
   purchase_price Decimal
+  mrp            Decimal @default(0)
   selling_price  Decimal?
 
   cgst_percent Decimal
   sgst_percent Decimal
   igst_percent Decimal
+  tax_inclusive Boolean @default(false)
 
   quantity           Int
   remaining_quantity Int
@@ -211,6 +213,7 @@ model purchase_item {
   cgst_percent    Decimal?
   sgst_percent    Decimal?
   igst_percent    Decimal?
+  tax_inclusive   Boolean @default(false)
 
   total           Decimal
 
@@ -260,6 +263,7 @@ model invoice_item {
   product_name String
   product_sku  String?
   variant_sku  String?
+  batch_no     String?
   hsn_code     String
 
   size  String?
@@ -269,6 +273,11 @@ model invoice_item {
   unit     String
   price    Decimal
   discount Decimal @default(0)
+
+  cgst_percent Decimal @default(0)
+  sgst_percent Decimal @default(0)
+  igst_percent Decimal @default(0)
+  tax_inclusive Boolean @default(false)
 
   cgst_amount Decimal @default(0)
   sgst_amount Decimal @default(0)
@@ -319,6 +328,7 @@ model stock_adjustments {
   product_variant_id String
 
   product_name String
+  variant_sku  String?
   batch_no     String?
 
   type       String
@@ -376,4 +386,15 @@ model invoice_audit {
   data       String?
 
   created_at DateTime @default(now())
+}
+
+/////////// PREFERENCES ////////////////////
+
+model preferences {
+  id    String @id @default(uuid())
+  key   String @unique
+  value String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

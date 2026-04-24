@@ -12,7 +12,7 @@ router.post("/bulk", batchController.createBulkBatches);
 
 // By ID
 router.get("/:id", batchController.getBatchById);
-router.patch("/:id", batchController.updateBatch);
+router.put("/:id", batchController.updateBatch);
 router.delete("/:id", batchController.deleteBatch);
 
 // By batchNo

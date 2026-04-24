@@ -16,72 +16,13 @@ export const createBatch = async (req: Request, res: Response) => {
     }
     const data = parsed.data;
 
-    // Resolve productVariantId if not provided
-    let productVariantId = data.productVariantId;
-    if (!productVariantId && data.productSku) {
-      // Find or create Product
-      let product = await prisma.products.findUnique({
-        where: { sku: data.productSku },
-      });
-      if (!product) {
-        // Assume create basic product if not exist (customize as needed)
-        product = await prisma.products.create({
-          data: {
-            name: data.productSku,
-            sku: data.productSku,
-            basePrice: data.purchasePrice || 0,
-            costPrice: data.purchasePrice,
-            mrp: data.sellingPrice || data.purchasePrice * 1.2,
-            categoryId: "64f7b8c5-9e5a-4f1d-8b2e-1a3d4e5f6789", // Default 'General' category - create via POST /categories first if needed
-          },
-        });
-      }
-
-      // Find or create variant
-      let variant = await prisma.productVariant.findFirst({
-        where: {
-          productId: product.id,
-          size: data.size!,
-          color: data.color!,
-        },
-      });
-      if (!variant) {
-        variant = await prisma.productVariant.create({
-          data: {
-            productId: product.id,
-            size: data.size!,
-            color: data.color!,
-            price: data.sellingPrice || 0,
-            costPrice: data.purchasePrice,
-          },
-        });
-      }
-      productVariantId = variant.id;
-    }
-    if (!productVariantId) {
-      return res
-        .status(400)
-        .json({ error: "Unable to resolve product variant" });
-    }
-
-    // Create batch
     const batch = await prisma.batches.create({
-      data: {
-        productVariantId,
-        batchNo: data.batchNo,
-        purchasePrice: data.purchasePrice,
-        sellingPrice: data.sellingPrice,
-        quantity: data.quantity,
-        remainingQuantity: data.remainingQuantity || data.quantity,
-        manufactureDate: data.manufactureDate,
-        expiryDate: data.expiryDate,
-        supplierName: data.supplierName,
-      },
+      data: data,
     });
 
     res.status(201).json({
-      message: "Batch created and stock updated successfully",
-      batch,
+      message: "Batch created successfully",
+      batch: batch,
     });
   } catch (error: any) {
     console.error(error);
@@ -101,26 +42,20 @@ export const createBulkBatches = async (req: Request, res: Response) => {
       });
     }
 
-    const results = [];
-    for (const batchData of parsed.data.batches) {
-      // Reuse createBatch logic? But for speed, parallel
-      const result = await createBatch(
-        { body: batchData } as Request,
-        res as Response,
-      ); // Simplistic, better extract function
-      // Actually, since async, use Promise.all but handle errors
-    }
+    const batches = await prisma.$transaction(
+      parsed.data.batches.map((data) =>
+        prisma.batches.create({
+          data: data,
+        })
+      )
+    );
 
-    // TODO: Implement bulk with transaction
-    // For now, sequential
-    const batchPromises = parsed.data.batches.map(async (data) => {
-      // copy createBatch logic here or ref
-      // Simplified stub - implement properly
+    res.status(201).json({
+      message: "Bulk batches created",
+      batches: batches
     });
-
-    const batches = await Promise.all(batchPromises);
-    res.status(201).json({ message: "Bulk batches created", batches });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to create bulk batches" });
   }
 };
@@ -133,22 +68,15 @@ export const getBatches = async (req: Request, res: Response) => {
 
     const [batches, total] = await Promise.all([
       prisma.batches.findMany({
-        include: {
-          productVariant: {
-            include: {
-              product: true,
-            },
-          },
-        },
         skip,
         take: limit,
-        orderBy: { createdAt: "desc" },
+        orderBy: { created_at: "desc" },
       }),
       prisma.batches.count(),
     ]);
 
     res.json({
-      batches,
+      batches: batches,
       pagination: {
         page,
         limit,
@@ -157,6 +85,7 @@ export const getBatches = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch batches" });
   }
 };
@@ -167,7 +96,7 @@ export const getBatchById = async (req: Request, res: Response) => {
     const batch = await prisma.batches.findUnique({
       where: { id },
       include: {
-        productVariant: {
+        product_variant: {
           include: {
             product: true,
           },
@@ -191,9 +120,9 @@ export const getBatchByBatchNo = async (req: Request, res: Response) => {
         : req.params.batchNo
     ) as string;
     const batch = await prisma.batches.findUnique({
-      where: { batchNo },
+      where: { batch_no: batchNo },
       include: {
-        productVariant: {
+        product_variant: {
           include: {
             product: true,
           },
@@ -219,24 +148,30 @@ export const updateBatch = async (req: Request, res: Response) => {
       });
     }
 
-    // Calculate stock delta if quantity changed
-    const oldBatch = await prisma.batches.findUnique({ where: { id } });
-    if (!oldBatch) return res.status(404).json({ error: "Batch not found" });
-
     const data = parsed.data;
-    const newQuantity = data.quantity || oldBatch.quantity;
-    const delta = newQuantity - oldBatch.quantity;
+
+    const updateData: any = {};
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.quantity !== undefined) updateData.quantity = data.quantity;
+    if (data.purchase_price !== undefined) updateData.purchase_price = data.purchase_price;
+    if (data.selling_price !== undefined) updateData.selling_price = data.selling_price;
+    if (data.remaining_quantity !== undefined) updateData.remaining_quantity = data.remaining_quantity;
+    if (data.manufacture_date !== undefined) updateData.manufacture_date = data.manufacture_date;
+    if (data.expiry_date !== undefined) updateData.expiry_date = data.expiry_date;
+    if (data.vendor_name !== undefined) updateData.vendor_name = data.vendor_name;
+    if (data.tax_inclusive !== undefined) updateData.tax_inclusive = data.tax_inclusive;
 
     const batch = await prisma.batches.update({
       where: { id },
-      data,
+      data: updateData,
     });
 
-    res.json({ message: "Batch updated", batch });
+    res.json({ message: "Batch updated", batch: batch });
   } catch (error: any) {
     if (error.code === "P2025") {
       return res.status(404).json({ error: "Batch not found" });
     }
+    console.log(error)
     res.status(500).json({ error: "Server error" });
   }
 };
@@ -249,8 +184,9 @@ export const deleteBatch = async (req: Request, res: Response) => {
 
     await prisma.batches.delete({ where: { id } });
 
-    res.json({ message: "Batch deleted and stock reverted" });
+    res.json({ message: "Batch deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Failed to delete batch" });
   }
 };
+
