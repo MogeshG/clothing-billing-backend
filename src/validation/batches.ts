@@ -17,7 +17,10 @@ const batchItemSchema = z.object({
   purchase_date: z.coerce.date().optional(),
   purchase_price: z.number().positive("Purchase price must be positive"),
   mrp: z.number().positive("MRP must be positive").default(0),
-  selling_price: z.number().positive("Selling price must be positive").optional(),
+  selling_price: z
+    .number()
+    .positive("Selling price must be positive")
+    .optional(),
   cgst_percent: z.number().min(0).default(0),
   sgst_percent: z.number().min(0).default(0),
   igst_percent: z.number().min(0).default(0),
@@ -44,4 +47,6 @@ export const updateBatchSchema = z.object({
   expiry_date: z.coerce.date().optional().nullable(),
   vendor_name: z.string().max(100).optional(),
   tax_inclusive: z.boolean().optional(),
+  batch_no: z.string().min(1).max(50).optional(),
+  barcode: z.string().min(1).optional(),
 });

@@ -3,6 +3,46 @@ import { prisma } from "../lib/prisma";
 import { hashPassword, comparePassword, generateToken } from "../lib/auth";
 import { registerSchema, loginSchema } from "../validation/auth";
 
+interface AuthRequest extends Request {
+  userId?: string;
+}
+
+const parsePermissions = (permissions: string | null | undefined) => {
+  if (!permissions) return {};
+  try {
+    const parsed = JSON.parse(permissions);
+    if (Array.isArray(parsed)) {
+      return parsed.reduce((acc: Record<string, any>, item: any) => {
+        if (item?.module) {
+          acc[item.module] = {
+            create: Boolean(item.canCreate),
+            read: Boolean(item.canRead),
+            update: Boolean(item.canUpdate),
+            delete: Boolean(item.canDelete),
+          };
+        }
+        return acc;
+      }, {});
+    }
+    if (typeof parsed === "object" && parsed !== null) {
+      return parsed;
+    }
+    return {};
+  } catch {
+    return {};
+  }
+};
+
+const formatUser = (user: any) => ({
+  id: user.id,
+  name: user.name,
+  phone: user.phone,
+  email: user.email ?? null,
+  permissions: parsePermissions(user.permissions),
+  createdAt: user.created_at?.toISOString() ?? null,
+  updatedAt: user.updated_at?.toISOString() ?? null,
+});
+
 export const register = async (req: Request, res: Response) => {
   try {
     const parsed = registerSchema.safeParse(req.body);
@@ -20,7 +60,7 @@ export const register = async (req: Request, res: Response) => {
         name,
         phone,
         email,
-        hashedPassword,
+        hashed_password: hashedPassword,
       },
     });
 
@@ -28,12 +68,7 @@ export const register = async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: "User created successfully",
-      user: {
-        id: user.id,
-        name: user.name,
-        phone: user.phone,
-        email: user.email,
-      },
+      user: formatUser(user),
       token,
     });
   } catch (error: any) {
@@ -58,11 +93,11 @@ export const login = async (req: Request, res: Response) => {
       where: { phone },
     });
 
-    if (!user || !user.hashedPassword) {
+    if (!user || !user.hashed_password) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    const isValid = await comparePassword(password, user.hashedPassword);
+    const isValid = await comparePassword(password, user.hashed_password);
 
     if (!isValid) {
       return res.status(401).json({ error: "Invalid credentials" });
@@ -72,9 +107,39 @@ export const login = async (req: Request, res: Response) => {
 
     res.json({
       message: "Login successful",
-      user: { id: user.id, name: user.name, phone: user.phone },
+      user: formatUser(user),
       token,
     });
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const me = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const user = await prisma.users.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        permissions: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user: formatUser(user) });
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }

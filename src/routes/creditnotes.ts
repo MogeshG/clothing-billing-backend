@@ -7,14 +7,19 @@ import {
   approveCreditNote,
   deleteCreditNote,
 } from "../controllers/creditNoteController";
+import { requirePermission } from "../lib/authMiddleware";
 
 const router = Router();
 
-router.post("/", createCreditNote);
-router.get("/", getCreditNotes);
-router.get("/:id", getCreditNoteById);
-router.patch("/:id", updateCreditNote);
-router.post("/:id/approve", approveCreditNote);
-router.delete("/:id", deleteCreditNote);
+router.post("/", requirePermission("Sales", "create"), createCreditNote);
+router.get("/", requirePermission("Sales", "read"), getCreditNotes);
+router.get("/:id", requirePermission("Sales", "read"), getCreditNoteById);
+router.patch("/:id", requirePermission("Sales", "update"), updateCreditNote);
+router.post(
+  "/:id/approve",
+  requirePermission("Sales", "update"),
+  approveCreditNote,
+);
+router.delete("/:id", requirePermission("Sales", "delete"), deleteCreditNote);
 
 export default router;

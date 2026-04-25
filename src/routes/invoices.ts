@@ -8,15 +8,20 @@ import {
   deleteInvoice,
   getInvoiceBill,
 } from "../controllers/invoiceController";
+import { requirePermission } from "../lib/authMiddleware";
 
 const router = Router();
 
-router.post("/", createInvoice);
-router.get("/", getInvoices);
-router.get("/:id", getInvoiceById);
-router.get("/:id/bill", getInvoiceBill);
-router.put("/:id", updateDraftInvoice);
-router.post("/:id/finalize", finalizeInvoice);
-router.delete("/:id", deleteInvoice);
+router.post("/", requirePermission("Sales", "create"), createInvoice);
+router.get("/", requirePermission("Sales", "read"), getInvoices);
+router.get("/:id", requirePermission("Sales", "read"), getInvoiceById);
+router.get("/:id/bill", requirePermission("Sales", "read"), getInvoiceBill);
+router.put("/:id", requirePermission("Sales", "update"), updateDraftInvoice);
+router.post(
+  "/:id/finalize",
+  requirePermission("Sales", "update"),
+  finalizeInvoice,
+);
+router.delete("/:id", requirePermission("Sales", "delete"), deleteInvoice);
 
 export default router;

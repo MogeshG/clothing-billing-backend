@@ -6,13 +6,26 @@ import {
   getLowStockAlerts,
   getRevenueByPaymentMethod,
 } from "../controllers/analyticsController";
+import { requirePermission } from "../lib/authMiddleware";
 
 const router = Router();
 
-router.get("/stats", getDashboardStats);
-router.get("/sales-report", getSalesReport);
-router.get("/top-products", getTopProducts);
-router.get("/low-stock", getLowStockAlerts);
-router.get("/payment-breakdown", getRevenueByPaymentMethod);
+router.get("/stats", requirePermission("Dashboard", "read"), getDashboardStats);
+router.get("/sales-report", requirePermission("Sales", "read"), getSalesReport);
+router.get(
+  "/top-products",
+  requirePermission("Dashboard", "read"),
+  getTopProducts,
+);
+router.get(
+  "/low-stock",
+  requirePermission("Stocks", "read"),
+  getLowStockAlerts,
+);
+router.get(
+  "/payment-breakdown",
+  requirePermission("Dashboard", "read"),
+  getRevenueByPaymentMethod,
+);
 
 export default router;
